@@ -28,8 +28,8 @@ impl Prompt<'_> {
     #[inline]
     fn color_fg(&mut self, fg: u8) {
         match fg {
-            0...7 => print!(";{}", 30 + fg),
-            8...15 => print!(";{}", 90 - 8 + fg),
+            0..=7 => print!(";{}", 30 + fg),
+            8..=15 => print!(";{}", 90 - 8 + fg),
             _ => print!(";38;5;{}", fg),
         }
     }
@@ -37,8 +37,8 @@ impl Prompt<'_> {
     #[inline]
     fn color_bg(&mut self, bg: u8) {
         match bg {
-            0...7 => print!(";{}", 40 + bg),
-            8...15 => print!(";{}", 100 - 8 + bg),
+            0..=7 => print!(";{}", 40 + bg),
+            8..=15 => print!(";{}", 100 - 8 + bg),
             _ => print!(";48;5;{}", bg),
         }
     }

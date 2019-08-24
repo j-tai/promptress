@@ -18,13 +18,10 @@ pub fn work_dir(p: &mut Prompt) {
             continue;
         }
         let prefix_path = Path::new(prefix.as_ref());
-        match dir.strip_prefix(prefix_path) {
-            Ok(path) => {
-                let value_path = Path::new(value.as_ref());
-                new_path = Some((value_path, path));
-                longest_match = len;
-            }
-            Err(_) => (),
+        if let Ok(path) = dir.strip_prefix(prefix_path) {
+            let value_path = Path::new(value.as_ref());
+            new_path = Some((value_path, path));
+            longest_match = len;
         }
     }
     let path = new_path.map(|(a, b)| a.join(b)).unwrap_or(dir);
