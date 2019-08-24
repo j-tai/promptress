@@ -1,7 +1,7 @@
 use crate::Prompt;
 
 fn is_root() -> bool {
-    return users::get_effective_uid() == 0;
+    users::get_effective_uid() == 0
 }
 
 pub fn dollar(p: &mut Prompt) {
