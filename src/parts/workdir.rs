@@ -44,6 +44,7 @@ pub fn work_dir(p: &mut Prompt) {
         .min(max_len);
         if length > max_len {
             begin = index + 1;
+            break;
         }
     }
 
