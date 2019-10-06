@@ -64,7 +64,7 @@ pub fn work_dir(p: &mut Prompt) {
 
     // Length of "..." for when a directory name is truncated
     let dir_trun_len = p.conf.work_dir.dir_trun.chars().count();
-    for (index, comp) in components[begin..].iter().enumerate() {
+    for (index, comp) in components.iter().enumerate().skip(begin) {
         if index == total - 1 {
             p.new_part(p.conf.work_dir.stem_bg);
             p.style(p.conf.work_dir.stem_sty);
