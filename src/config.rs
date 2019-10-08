@@ -9,6 +9,8 @@ pub struct Style {
     pub color: u8,
     pub bold: bool,
     pub italic: bool,
+    pub underline: bool,
+    pub blink: bool,
     pub strike: bool,
 }
 
