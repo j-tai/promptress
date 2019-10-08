@@ -81,22 +81,42 @@ impl Default for ExitCode {
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
 pub struct WorkDir<'a> {
-    pub bg: u8,
-    pub sty: Style,
-    pub trun_bg: u8,
-    pub trun_sty: Style,
-    pub stem_bg: u8,
-    pub stem_sty: Style,
+    /// String to display when any path component is truncated.
+    #[serde(borrow)]
+    pub comp_trun: Cow<'a, str>,
+    /// Maximum total length of each path component.
+    pub comp_max_len: usize,
+
+    /// Maximum total length of the path.
+    pub path_max_len: usize,
+    /// String to display when the entire path is truncated.
+    #[serde(borrow)]
+    pub path_trun: Cow<'a, str>,
+    /// Background color of path truncation string.
+    pub path_trun_bg: u8,
+    /// Foreground style of path truncation string.
+    pub path_trun_sty: Style,
+
+    /// Normal path component background color.
+    pub dir_bg: u8,
+    /// Normal path component foreground style.
+    pub dir_sty: Style,
+
+    /// Base path component background color.
+    pub base_bg: u8,
+    /// Base path component foreground style.
+    pub base_sty: Style,
+
+    /// Whether or not Git is enabled.
     pub git: bool,
+    /// Git branch background color.
     pub git_bg: u8,
+    /// Git branch foreground style.
     pub git_sty: Style,
+    /// Git branch prefix.
     pub git_prefix: Cow<'a, str>,
-    #[serde(borrow)]
-    pub trun: Cow<'a, str>,
-    #[serde(borrow)]
-    pub dir_trun: Cow<'a, str>,
-    pub max_len: usize,
-    pub dir_max_len: usize,
+
+    /// List of path aliases.
     #[serde(borrow)]
     pub aliases: HashMap<Cow<'a, str>, Cow<'a, str>>,
 }
@@ -104,20 +124,20 @@ pub struct WorkDir<'a> {
 impl Default for WorkDir<'_> {
     fn default() -> Self {
         WorkDir {
-            bg: 15,
-            sty: Style::color(0),
-            trun_bg: 15,
-            trun_sty: Style::color(0),
-            stem_bg: 15,
-            stem_sty: Style::color(0),
+            comp_trun: "...".into(),
+            comp_max_len: 16,
+            path_max_len: 64,
+            path_trun: "...".into(),
+            path_trun_bg: 15,
+            path_trun_sty: Style::color(0),
+            dir_bg: 15,
+            dir_sty: Style::color(0),
+            base_bg: 15,
+            base_sty: Style::color(0),
             git: false,
             git_bg: 7,
             git_sty: Style::color(0),
             git_prefix: "Git:".into(),
-            trun: "...".into(),
-            dir_trun: "...".into(),
-            max_len: 64,
-            dir_max_len: 16,
             aliases: Default::default(),
         }
     }

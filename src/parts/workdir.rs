@@ -22,7 +22,7 @@ impl<'a> Part<'a> {
     /// truncation.
     fn count_chars(&self, conf: &WorkDir) -> usize {
         match self {
-            Part::Truncate => conf.trun.chars().count(),
+            Part::Truncate => conf.path_trun.chars().count(),
             Part::Root | Part::RootStem => 1,
             Part::Dir(s) | Part::Stem(s) => s.chars().count(),
             Part::Git(s) => conf.git_prefix.chars().count() + s.chars().count(),
@@ -32,19 +32,19 @@ impl<'a> Part<'a> {
     /// Counts the number of characters in this `Part`, after
     /// truncation.
     fn truncated_chars(&self, conf: &WorkDir) -> usize {
-        self.count_chars(conf).min(conf.dir_max_len)
+        self.count_chars(conf).min(conf.comp_max_len)
     }
 
     /// Returns whether this part should be truncated.
     fn should_truncate(&self, conf: &WorkDir) -> bool {
-        self.count_chars(conf) > conf.dir_max_len
+        self.count_chars(conf) > conf.comp_max_len
     }
 
     /// Returns the part's content, ignoring truncation, but including
     /// prefixes.
     fn content(&'a self, conf: &'a WorkDir) -> Cow<'a, str> {
         match self {
-            Part::Truncate => conf.trun.as_ref().into(),
+            Part::Truncate => conf.path_trun.as_ref().into(),
             Part::Root | Part::RootStem => "/".into(),
             Part::Dir(s) | Part::Stem(s) => s.as_ref().into(),
             Part::Git(s) => format!("{}{}", conf.git_prefix, s).into(),
@@ -54,9 +54,9 @@ impl<'a> Part<'a> {
     /// Returns the style and background for this part.
     fn style_bg(&self, conf: &WorkDir) -> (Style, u8) {
         match self {
-            Part::Truncate => (conf.trun_sty, conf.trun_bg),
-            Part::Root | Part::Dir(_) => (conf.sty, conf.bg),
-            Part::RootStem | Part::Stem(_) => (conf.stem_sty, conf.stem_bg),
+            Part::Truncate => (conf.path_trun_sty, conf.path_trun_bg),
+            Part::Root | Part::Dir(_) => (conf.dir_sty, conf.dir_bg),
+            Part::RootStem | Part::Stem(_) => (conf.base_sty, conf.base_bg),
             Part::Git(_) => (conf.git_sty, conf.git_bg),
         }
     }
@@ -75,7 +75,7 @@ fn process_path<'a>(path: &'a Path, mod_path: &'a Path, conf: &WorkDir) -> Vec<P
     let mut try_add_part = |part: Part<'a>| {
         // Check if this component exceeds the length limit
         let part_chars = part.truncated_chars(conf);
-        if total_len + 3 + part_chars > conf.max_len {
+        if total_len + 3 + part_chars > conf.path_max_len {
             parts.push(Part::Truncate);
             true
         } else {
@@ -186,8 +186,8 @@ fn print_parts(parts: &[Part], p: &mut Prompt) {
         p.style(style);
         if part.should_truncate(&p.conf.work_dir) {
             let conf = &p.conf.work_dir;
-            let displayed_len = conf.dir_max_len - conf.dir_trun.chars().count();
-            print!("{:.*}{}", displayed_len, part.content(conf), conf.dir_trun);
+            let displayed_len = conf.comp_max_len - conf.comp_trun.chars().count();
+            print!("{:.*}{}", displayed_len, part.content(conf), conf.comp_trun);
         } else {
             print!("{}", part.content(&p.conf.work_dir));
         }
@@ -212,7 +212,7 @@ mod tests {
     fn part_truncate() {
         let part = Part::Dir("0123456789abcdef".into());
         let mut conf = WorkDir::default();
-        conf.dir_max_len = 12;
+        conf.comp_max_len = 12;
         assert!(part.should_truncate(&conf));
         assert_eq!(part.truncated_chars(&conf), 12);
     }
@@ -268,7 +268,7 @@ mod tests {
     fn process_path_truncate() {
         let path = Path::new("/one/two/three/four/five/six/seven");
         let mut conf = WorkDir::default();
-        conf.max_len = 10;
+        conf.path_max_len = 10;
         assert_eq!(
             process_path(path, path, &conf),
             vec![Part::Truncate, Part::Stem("seven".into())]
