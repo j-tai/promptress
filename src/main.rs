@@ -14,7 +14,6 @@ mod prompt;
 fn display_prompt(mut p: Prompt) {
     parts::exit_code(&mut p);
     parts::work_dir(&mut p);
-    parts::git(&mut p);
     parts::dollar(&mut p);
     p.finish();
 }

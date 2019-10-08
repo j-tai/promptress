@@ -37,8 +37,6 @@ pub struct Config<'a> {
     pub dollar: Dollar,
     pub exit_code: ExitCode,
     #[serde(borrow)]
-    pub git: Git<'a>,
-    #[serde(borrow)]
     pub work_dir: WorkDir<'a>,
 }
 
@@ -82,24 +80,6 @@ impl Default for ExitCode {
 
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
-pub struct Git<'a> {
-    pub bg: u8,
-    pub sty: Style,
-    pub prefix: Cow<'a, str>,
-}
-
-impl Default for Git<'_> {
-    fn default() -> Self {
-        Git {
-            bg: 7,
-            sty: Style::color(0),
-            prefix: "Git:".into(),
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize)]
-#[serde(default)]
 pub struct WorkDir<'a> {
     pub bg: u8,
     pub sty: Style,
@@ -107,6 +87,10 @@ pub struct WorkDir<'a> {
     pub trun_sty: Style,
     pub stem_bg: u8,
     pub stem_sty: Style,
+    pub git: bool,
+    pub git_bg: u8,
+    pub git_sty: Style,
+    pub git_prefix: Cow<'a, str>,
     #[serde(borrow)]
     pub trun: Cow<'a, str>,
     #[serde(borrow)]
@@ -126,6 +110,10 @@ impl Default for WorkDir<'_> {
             trun_sty: Style::color(0),
             stem_bg: 15,
             stem_sty: Style::color(0),
+            git: false,
+            git_bg: 7,
+            git_sty: Style::color(0),
+            git_prefix: "Git:".into(),
             trun: "...".into(),
             dir_trun: "...".into(),
             max_len: 64,

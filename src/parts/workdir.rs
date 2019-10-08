@@ -3,6 +3,8 @@ use std::env;
 use std::mem;
 use std::path::{Component, Path, PathBuf};
 
+use git2::{ErrorCode, Repository};
+
 use crate::{Prompt, Style, WorkDir};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -12,6 +14,7 @@ enum Part<'a> {
     RootStem,
     Dir(Cow<'a, str>),
     Stem(Cow<'a, str>),
+    Git(Cow<'a, str>),
 }
 
 impl<'a> Part<'a> {
@@ -22,6 +25,7 @@ impl<'a> Part<'a> {
             Part::Truncate => conf.trun.chars().count(),
             Part::Root | Part::RootStem => 1,
             Part::Dir(s) | Part::Stem(s) => s.chars().count(),
+            Part::Git(s) => conf.git_prefix.chars().count() + s.chars().count(),
         }
     }
 
@@ -36,12 +40,14 @@ impl<'a> Part<'a> {
         self.count_chars(conf) > conf.dir_max_len
     }
 
-    /// Returns the string to display for this part.
-    fn as_str(&'a self, conf: &'a WorkDir) -> &'a str {
+    /// Returns the part's content, ignoring truncation, but including
+    /// prefixes.
+    fn content(&'a self, conf: &'a WorkDir) -> Cow<'a, str> {
         match self {
-            Part::Truncate => &conf.trun,
-            Part::Root | Part::RootStem => "/",
-            Part::Dir(s) | Part::Stem(s) => &s,
+            Part::Truncate => conf.trun.as_ref().into(),
+            Part::Root | Part::RootStem => "/".into(),
+            Part::Dir(s) | Part::Stem(s) => s.as_ref().into(),
+            Part::Git(s) => format!("{}{}", conf.git_prefix, s).into(),
         }
     }
 
@@ -51,17 +57,45 @@ impl<'a> Part<'a> {
             Part::Truncate => (conf.trun_sty, conf.trun_bg),
             Part::Root | Part::Dir(_) => (conf.sty, conf.bg),
             Part::RootStem | Part::Stem(_) => (conf.stem_sty, conf.stem_bg),
+            Part::Git(_) => (conf.git_sty, conf.git_bg),
         }
     }
 }
 
 /// Turn a path into a list of parts.
-fn process_path<'a>(path: &'a Path, conf: &WorkDir) -> Vec<Part<'a>> {
+fn process_path<'a>(path: &'a Path, mod_path: &'a Path, conf: &WorkDir) -> Vec<Part<'a>> {
     // List of parts, stored in reverse
     let mut parts = vec![];
     let mut total_len = 0;
+    let mut current_path = Some(path);
 
-    for component in path.components().rev() {
+    // Tries to add a part. If the part results in the prompt being
+    // too long, then `true` is returned and a `Part::Truncate` is
+    // added instead. Otherwise, adds the part and returns `false`.
+    let mut try_add_part = |part: Part<'a>| {
+        // Check if this component exceeds the length limit
+        let part_chars = part.truncated_chars(conf);
+        if total_len + 3 + part_chars > conf.max_len {
+            parts.push(Part::Truncate);
+            true
+        } else {
+            parts.push(part);
+            total_len += 3 + part_chars;
+            false
+        }
+    };
+
+    for component in mod_path.components().rev() {
+        let full_path = current_path.unwrap();
+        // Show git branch if enabled
+        if conf.git {
+            if let Some(branch) = get_git_branch(full_path) {
+                let part = Part::Git(branch);
+                if try_add_part(part) {
+                    break;
+                }
+            }
+        }
         let part = match component {
             Component::Prefix(_) => unimplemented!(),
             Component::RootDir => Part::Root,
@@ -69,15 +103,10 @@ fn process_path<'a>(path: &'a Path, conf: &WorkDir) -> Vec<Part<'a>> {
             Component::CurDir => Part::Dir(".".into()),
             Component::ParentDir => Part::Dir("..".into()),
         };
-        // Check if this component exceeds the length limit
-        let part_chars = part.truncated_chars(conf);
-        if total_len + 3 + part_chars > conf.max_len {
-            parts.push(Part::Truncate);
+        if try_add_part(part) {
             break;
-        } else {
-            parts.push(part);
-            total_len += 3 + part_chars;
         }
+        current_path = full_path.parent();
     }
 
     // Replace the first dir with a stem
@@ -134,6 +163,22 @@ where
     }
 }
 
+fn get_git_branch(path: &Path) -> Option<Cow<'static, str>> {
+    let repo = Repository::open(path).ok()?;
+    let head = repo.head();
+    Some(match head {
+        Ok(h) => h
+            .shorthand()
+            .map(|s| s.to_string().into())
+            .unwrap_or_else(|| "--".into()),
+        Err(ref e) if e.code() == ErrorCode::UnbornBranch => "--".into(),
+        Err(e) => {
+            eprintln!("promptress: git ({:?}): {}", path, e);
+            "?".into()
+        }
+    })
+}
+
 fn print_parts(parts: &[Part], p: &mut Prompt) {
     for part in parts {
         let (style, bg) = part.style_bg(&p.conf.work_dir);
@@ -142,9 +187,9 @@ fn print_parts(parts: &[Part], p: &mut Prompt) {
         if part.should_truncate(&p.conf.work_dir) {
             let conf = &p.conf.work_dir;
             let displayed_len = conf.dir_max_len - conf.dir_trun.chars().count();
-            print!("{:.*}{}", displayed_len, part.as_str(conf), conf.dir_trun);
+            print!("{:.*}{}", displayed_len, part.content(conf), conf.dir_trun);
         } else {
-            print!("{}", part.as_str(&p.conf.work_dir));
+            print!("{}", part.content(&p.conf.work_dir));
         }
     }
 }
@@ -153,8 +198,8 @@ pub fn work_dir(p: &mut Prompt) {
     let dir: PathBuf = env::var_os("PWD")
         .map(|s| s.into())
         .unwrap_or_else(|| env::current_dir().expect("cannot get working directory"));
-    let path = apply_aliases(&dir, &p.conf.work_dir.aliases);
-    let parts = process_path(&path, &p.conf.work_dir);
+    let mod_path = apply_aliases(&dir, &p.conf.work_dir.aliases);
+    let parts = process_path(&dir, &mod_path, &p.conf.work_dir);
     print_parts(&parts, p);
 }
 
@@ -173,11 +218,12 @@ mod tests {
     }
 
     #[test]
-    fn process_path_relative() {
-        let path = Path::new("user/foo");
+    fn process_path_aliased() {
+        let path = Path::new("/home/user/foo");
+        let path_aliased = Path::new("User/foo");
         assert_eq!(
-            process_path(path, &Default::default()),
-            vec![Part::Dir("user".into()), Part::Stem("foo".into())]
+            process_path(path, path_aliased, &Default::default()),
+            vec![Part::Dir("User".into()), Part::Stem("foo".into())]
         );
     }
 
@@ -185,7 +231,7 @@ mod tests {
     fn process_path_absolute() {
         let path = Path::new("/home/user/foo");
         assert_eq!(
-            process_path(path, &Default::default()),
+            process_path(path, path, &Default::default()),
             vec![
                 Part::Root,
                 Part::Dir("home".into()),
@@ -199,7 +245,7 @@ mod tests {
     fn process_path_special_parts() {
         let path = Path::new("./foo/../bar");
         assert_eq!(
-            process_path(path, &Default::default()),
+            process_path(path, path, &Default::default()),
             vec![
                 Part::Dir(".".into()),
                 Part::Dir("foo".into()),
@@ -213,7 +259,7 @@ mod tests {
     fn process_path_root() {
         let path = Path::new("/");
         assert_eq!(
-            process_path(path, &Default::default()),
+            process_path(path, path, &Default::default()),
             vec![Part::RootStem]
         );
     }
@@ -224,7 +270,7 @@ mod tests {
         let mut conf = WorkDir::default();
         conf.max_len = 10;
         assert_eq!(
-            process_path(path, &conf),
+            process_path(path, path, &conf),
             vec![Part::Truncate, Part::Stem("seven".into())]
         );
     }
