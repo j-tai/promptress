@@ -53,6 +53,12 @@ impl Prompt<'_> {
         if style.italic {
             print!(";3");
         }
+        if style.underline {
+            print!(";4");
+        }
+        if style.blink {
+            print!(";5");
+        }
         if style.strike {
             print!(";9");
         }
