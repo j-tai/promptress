@@ -13,4 +13,4 @@ toml = "0.5"
 users = "0.9"
 smallvec = "0.6"
 termion = "1"
-git2 = { version = "0.9", default-features = false }
+git2 = { version = "0.10", default-features = false }
