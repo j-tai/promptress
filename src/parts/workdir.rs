@@ -275,6 +275,32 @@ mod tests {
         );
     }
 
+    #[cfg(unix)]
+    #[test]
+    fn process_path_non_utf8() {
+        use std::ffi::OsStr;
+        use std::os::unix::ffi::OsStrExt;
+
+        // \xff is invalid UTF-8
+        let path = Path::new(OsStr::from_bytes(b"/foo/\xff"));
+        let conf = WorkDir::default();
+        assert_eq!(
+            process_path(path, path, &conf),
+            vec![
+                Part::Root,
+                Part::Dir("foo".into()),
+                Part::Stem("\u{fffd}".into()),
+            ]
+        );
+    }
+
+    #[test]
+    fn apply_alias_no_match() {
+        let path = Path::new("/no/match");
+        let aliases: HashMap<&str, &str> = HashMap::new();
+        assert_eq!(apply_aliases(path, &aliases), path);
+    }
+
     #[test]
     fn apply_alias_exact() {
         let path = Path::new("/alias/foo");
@@ -296,6 +322,17 @@ mod tests {
         let path = Path::new("/alias/foobar");
         let mut aliases = HashMap::new();
         aliases.insert("/alias/foo", "Foo");
-        assert_eq!(apply_aliases(path, &aliases), Path::new("/alias/foobar"));
+        assert_eq!(apply_aliases(path, &aliases), path);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn apply_alias_non_utf8() {
+        use std::ffi::OsStr;
+        use std::os::unix::ffi::OsStrExt;
+
+        let path = Path::new(OsStr::from_bytes(b"/alias/\xff/a"));
+        let aliases: HashMap<&str, &str> = HashMap::new();
+        assert_eq!(apply_aliases(path, &aliases), path);
     }
 }
