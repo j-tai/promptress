@@ -1,9 +1,9 @@
-use std::path::Path;
 use std::env;
 use std::env::VarError;
 use std::fs::File;
 use std::io;
 use std::io::Read;
+use std::path::Path;
 use std::process;
 
 pub use crate::config::*;

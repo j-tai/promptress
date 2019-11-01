@@ -135,7 +135,7 @@ fn process_path<'a>(path: &'a Path, mod_path: &'a Path, conf: &WorkDir) -> Vec<P
     parts
 }
 
-fn apply_aliases<'a, 'b, I, P, Q>(path: &'a Path, aliases: I) -> Cow<'a, Path>
+fn apply_aliases<I, P, Q>(path: &Path, aliases: I) -> Cow<Path>
 where
     I: IntoIterator<Item = (P, Q)>,
     P: AsRef<str>,
