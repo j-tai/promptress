@@ -2,7 +2,7 @@
 
 A lightning-fast, customizable prompt
 
-![promptress](https://linx.jtai.ca/f/promptress.png)
+![promptress](https://www.jtai.ca/files/promptress.png)
 
 Having a very fast prompt is more important than you might think. If your prompt takes half a second to render, then you must wait for it before you can type your next command. These half-seconds can add up.
 
