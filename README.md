@@ -34,7 +34,7 @@ PS1='$(PROMPTRESS_EXIT_CODE=$? promptress)'
 
 You can add the above line to your `~/.bashrc` to make the change permanent.
 
-To tweak the colours, add a Git branch display, and more, see **Configuration guide** [coming soon].
+To tweak the colours, add a Git branch display, and more, see [**Configuration guide**](https://github.com/j-tai/promptress/wiki/Configuration-guide).
 
 ## License
 
