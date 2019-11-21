@@ -8,15 +8,21 @@ Having a very fast prompt is more important than you might think. If your prompt
 
 Fortunately, promptress takes **less than 5 ms** to render (but YMMV).
 
-## Building
+## Building and installing
 
-You can build this project like any other Rust project:
+You can install this project with Cargo:
+
+```console
+$ cargo install --path .
+```
+
+Or, you can just build it:
 
 ```console
 $ cargo build --release
 ```
 
-Then the binary will be at `./target/release/promptress`. Move this binary somewhere that's in your `$PATH`.
+Then the binary will be at `./target/release/promptress`.
 
 ## Getting started
 
