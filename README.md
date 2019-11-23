@@ -8,21 +8,15 @@ Having a very fast prompt is more important than you might think. If your prompt
 
 Fortunately, promptress takes **less than 5 ms** to render (but YMMV).
 
-## Building and installing
+## Installing
 
 You can install this project with Cargo:
 
 ```console
-$ cargo install --path .
+$ cargo install promptress
 ```
 
-Or, you can just build it:
-
-```console
-$ cargo build --release
-```
-
-Then the binary will be at `./target/release/promptress`.
+This will download promptress from crates.io, build it, and install it.
 
 ## Getting started
 
