@@ -1,8 +1,9 @@
 use std::borrow::Cow;
-use std::path::Path;use std::fmt;
-use std::fmt::{Display,Formatter};
+use std::fmt;
+use std::fmt::{Display, Formatter};
+use std::path::Path;
 
-use git2::{Repository,ErrorCode};
+use git2::{ErrorCode, Repository};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct GitStatus {
