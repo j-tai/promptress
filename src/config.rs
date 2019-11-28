@@ -138,7 +138,7 @@ impl Default for WorkDir<'_> {
 #[serde(default)]
 pub struct WorkDirGit<'a> {
     /// Whether or not Git is enabled.
-    pub enabled: bool,
+    pub enable: bool,
     /// Git branch background color.
     pub bg: u8,
     /// Git branch foreground style.
@@ -150,7 +150,7 @@ pub struct WorkDirGit<'a> {
 impl Default for WorkDirGit<'_> {
     fn default() -> Self {
         WorkDirGit {
-            enabled: false,
+            enable: false,
             bg: 7,
             sty: Style::color(0),
             prefix: "Git:".into(),
