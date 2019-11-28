@@ -8,6 +8,13 @@ Having a very fast prompt is more important than you might think. If your prompt
 
 Fortunately, promptress takes **less than 5 ms** to render (but YMMV).
 
+## Features
+
+* Lightning fast
+* Shows the exit code of the last command
+* Shows the current working directory
+* Shows the current Git branch
+
 ## Installing
 
 You can install this project with Cargo:
