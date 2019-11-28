@@ -3,9 +3,9 @@ use std::env;
 use std::mem;
 use std::path::{Component, Path, PathBuf};
 
-use git2::{ErrorCode, Repository};
-
 use crate::{Prompt, Style, WorkDir};
+
+mod git;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum Part<'a> {
@@ -14,7 +14,7 @@ enum Part<'a> {
     RootStem,
     Dir(Cow<'a, str>),
     Stem(Cow<'a, str>),
-    Git(Cow<'a, str>),
+    Git(git::GitStatus),
 }
 
 impl<'a> Part<'a> {
@@ -25,7 +25,7 @@ impl<'a> Part<'a> {
             Part::Truncate => conf.path_trun.chars().count(),
             Part::Root | Part::RootStem => 1,
             Part::Dir(s) | Part::Stem(s) => s.chars().count(),
-            Part::Git(s) => conf.git_prefix.chars().count() + s.chars().count(),
+            Part::Git(s) => conf.git_prefix.chars().count() + format!("{}", s).chars().count(),
         }
     }
 
@@ -97,8 +97,8 @@ fn process_path<'a>(path: &'a Path, mod_path: &'a Path, conf: &WorkDir) -> Vec<P
         let full_path = current_path.unwrap();
         // Show git branch if enabled
         if conf.git && !normal_path_component_eq(component, ".git") {
-            if let Some(branch) = get_git_branch(full_path) {
-                let part = Part::Git(branch);
+            if let Some(status) = git::get_status(full_path) {
+                let part = Part::Git(status);
                 if try_add_part(part) {
                     break;
                 }
@@ -169,22 +169,6 @@ where
         Some(new_path) => new_path.into(),
         None => path.into(),
     }
-}
-
-fn get_git_branch(path: &Path) -> Option<Cow<'static, str>> {
-    let repo = Repository::open(path).ok()?;
-    let head = repo.head();
-    Some(match head {
-        Ok(h) => h
-            .shorthand()
-            .map(|s| s.to_string().into())
-            .unwrap_or_else(|| "--".into()),
-        Err(ref e) if e.code() == ErrorCode::UnbornBranch => "--".into(),
-        Err(e) => {
-            eprintln!("promptress: git ({:?}): {}", path, e);
-            "?".into()
-        }
-    })
 }
 
 fn print_parts(parts: &[Part], p: &mut Prompt) {
