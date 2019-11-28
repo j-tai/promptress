@@ -107,14 +107,8 @@ pub struct WorkDir<'a> {
     /// Base path component foreground style.
     pub base_sty: Style,
 
-    /// Whether or not Git is enabled.
-    pub git: bool,
-    /// Git branch background color.
-    pub git_bg: u8,
-    /// Git branch foreground style.
-    pub git_sty: Style,
-    /// Git branch prefix.
-    pub git_prefix: Cow<'a, str>,
+    /// Git options.
+    pub git: WorkDirGit<'a>,
 
     /// List of path aliases.
     #[serde(borrow)]
@@ -134,11 +128,32 @@ impl Default for WorkDir<'_> {
             dir_sty: Style::color(0),
             base_bg: 15,
             base_sty: Style::color(0),
-            git: false,
-            git_bg: 7,
-            git_sty: Style::color(0),
-            git_prefix: "Git:".into(),
+            git: Default::default(),
             aliases: Default::default(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(default)]
+pub struct WorkDirGit<'a> {
+    /// Whether or not Git is enabled.
+    pub enabled: bool,
+    /// Git branch background color.
+    pub bg: u8,
+    /// Git branch foreground style.
+    pub sty: Style,
+    /// Git branch prefix.
+    pub prefix: Cow<'a, str>,
+}
+
+impl Default for WorkDirGit<'_> {
+    fn default() -> Self {
+        WorkDirGit {
+            enabled: false,
+            bg: 7,
+            sty: Style::color(0),
+            prefix: "Git:".into(),
         }
     }
 }

@@ -25,7 +25,7 @@ impl<'a> Part<'a> {
             Part::Truncate => conf.path_trun.chars().count(),
             Part::Root | Part::RootStem => 1,
             Part::Dir(s) | Part::Stem(s) => s.chars().count(),
-            Part::Git(s) => conf.git_prefix.chars().count() + format!("{}", s).chars().count(),
+            Part::Git(s) => conf.git.prefix.chars().count() + format!("{}", s).chars().count(),
         }
     }
 
@@ -47,7 +47,7 @@ impl<'a> Part<'a> {
             Part::Truncate => conf.path_trun.as_ref().into(),
             Part::Root | Part::RootStem => "/".into(),
             Part::Dir(s) | Part::Stem(s) => s.as_ref().into(),
-            Part::Git(s) => format!("{}{}", conf.git_prefix, s).into(),
+            Part::Git(s) => format!("{}{}", conf.git.prefix, s).into(),
         }
     }
 
@@ -57,7 +57,7 @@ impl<'a> Part<'a> {
             Part::Truncate => (conf.path_trun_sty, conf.path_trun_bg),
             Part::Root | Part::Dir(_) => (conf.dir_sty, conf.dir_bg),
             Part::RootStem | Part::Stem(_) => (conf.base_sty, conf.base_bg),
-            Part::Git(_) => (conf.git_sty, conf.git_bg),
+            Part::Git(_) => (conf.git.sty, conf.git.bg),
         }
     }
 }
@@ -96,7 +96,7 @@ fn process_path<'a>(path: &'a Path, mod_path: &'a Path, conf: &WorkDir) -> Vec<P
     for component in mod_path.components().rev() {
         let full_path = current_path.unwrap();
         // Show git branch if enabled
-        if conf.git && !normal_path_component_eq(component, ".git") {
+        if conf.git.enabled && !normal_path_component_eq(component, ".git") {
             if let Some(status) = git::get_status(full_path) {
                 let part = Part::Git(status);
                 if try_add_part(part) {
