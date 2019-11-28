@@ -64,6 +64,14 @@ impl<'a> Part<'a> {
 
 /// Turn a path into a list of parts.
 fn process_path<'a>(path: &'a Path, mod_path: &'a Path, conf: &WorkDir) -> Vec<Part<'a>> {
+    fn normal_path_component_eq(comp: Component, value: &str) -> bool {
+        if let Component::Normal(dir) = comp {
+            dir == value
+        } else {
+            false
+        }
+    }
+
     // List of parts, stored in reverse
     let mut parts = vec![];
     let mut total_len = 0;
@@ -88,7 +96,7 @@ fn process_path<'a>(path: &'a Path, mod_path: &'a Path, conf: &WorkDir) -> Vec<P
     for component in mod_path.components().rev() {
         let full_path = current_path.unwrap();
         // Show git branch if enabled
-        if conf.git {
+        if conf.git && !normal_path_component_eq(component, ".git") {
             if let Some(branch) = get_git_branch(full_path) {
                 let part = Part::Git(branch);
                 if try_add_part(part) {
