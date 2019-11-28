@@ -96,7 +96,7 @@ fn process_path<'a>(path: &'a Path, mod_path: &'a Path, conf: &WorkDir) -> Vec<P
     for component in mod_path.components().rev() {
         let full_path = current_path.unwrap();
         // Show git branch if enabled
-        if conf.git.enabled && !normal_path_component_eq(component, ".git") {
+        if conf.git.enable && !normal_path_component_eq(component, ".git") {
             if let Some(status) = git::get_status(full_path) {
                 let part = Part::Git(status);
                 if try_add_part(part) {
