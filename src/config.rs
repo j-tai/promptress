@@ -179,15 +179,15 @@ impl Default for WorkDirGit<'_> {
             prefix: "Git:".into(),
             separator: "|".into(),
             ahead: "↑".into(),
-            ahead_sty: Style::color(4),
+            ahead_sty: Style::color(19),
             behind: "↓".into(),
-            behind_sty: Style::color(4),
+            behind_sty: Style::color(19),
             conflict: "!".into(),
             conflict_sty: Style::color(0),
             index: "•".into(),
-            index_sty: Style::color(2),
+            index_sty: Style::color(28),
             wt: "+".into(),
-            wt_sty: Style::color(1),
+            wt_sty: Style::color(88),
         }
     }
 }
