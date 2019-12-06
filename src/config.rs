@@ -152,9 +152,9 @@ pub struct WorkDirGit<'a> {
     pub ahead: Cow<'a, str>,
     /// Style of indicator for 'current branch is ahead of upstream'.
     pub ahead_sty: Style,
-    /// Indocator for 'current branch is behind upstream'.
+    /// Indicator for 'current branch is behind upstream'.
     pub behind: Cow<'a, str>,
-    /// Style of indocator for 'current branch is behind upstream'.
+    /// Style of indicator for 'current branch is behind upstream'.
     pub behind_sty: Style,
     /// Indicator for 'there are file conflicts'.
     pub conflict: Cow<'a, str>,
