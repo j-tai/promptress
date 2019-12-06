@@ -3,7 +3,7 @@ use std::env;
 use std::mem;
 use std::path::{Component, Path, PathBuf};
 
-use crate::{Prompt, Style, WorkDir};
+use crate::{Prompt, WorkDir};
 
 mod git;
 
@@ -25,7 +25,7 @@ impl<'a> Part<'a> {
             Part::Truncate => conf.path_trun.chars().count(),
             Part::Root | Part::RootStem => 1,
             Part::Dir(s) | Part::Stem(s) => s.chars().count(),
-            Part::Git(s) => conf.git.prefix.chars().count() + format!("{}", s).chars().count(),
+            Part::Git(s) => s.branch.chars().count(),
         }
     }
 
@@ -35,29 +35,70 @@ impl<'a> Part<'a> {
         self.count_chars(conf).min(conf.comp_max_len)
     }
 
-    /// Returns whether this part should be truncated.
-    fn should_truncate(&self, conf: &WorkDir) -> bool {
-        self.count_chars(conf) > conf.comp_max_len
-    }
-
-    /// Returns the part's content, ignoring truncation, but including
-    /// prefixes.
-    fn content(&'a self, conf: &'a WorkDir) -> Cow<'a, str> {
-        match self {
-            Part::Truncate => conf.path_trun.as_ref().into(),
-            Part::Root | Part::RootStem => "/".into(),
-            Part::Dir(s) | Part::Stem(s) => s.as_ref().into(),
-            Part::Git(s) => format!("{}{}", conf.git.prefix, s).into(),
+    /// Write the part to the prompt.
+    fn write(&self, p: &mut Prompt) {
+        fn write_truncated_str(s: &str, trun: &str, len: usize) {
+            if s.chars().count() > len {
+                let n = len - trun.chars().count();
+                print!("{:.*}{}", n, s, trun);
+            } else {
+                print!("{}", s);
+            }
         }
-    }
-
-    /// Returns the style and background for this part.
-    fn style_bg(&self, conf: &WorkDir) -> (Style, u8) {
         match self {
-            Part::Truncate => (conf.path_trun_sty, conf.path_trun_bg),
-            Part::Root | Part::Dir(_) => (conf.dir_sty, conf.dir_bg),
-            Part::RootStem | Part::Stem(_) => (conf.base_sty, conf.base_bg),
-            Part::Git(_) => (conf.git.sty, conf.git.bg),
+            Part::Truncate => {
+                p.new_part(p.conf.work_dir.path_trun_bg);
+                p.style(p.conf.work_dir.path_trun_sty);
+                print!("{}", p.conf.work_dir.path_trun);
+            }
+            Part::Root => {
+                p.new_part(p.conf.work_dir.dir_bg);
+                p.style(p.conf.work_dir.dir_sty);
+                print!("/");
+            }
+            Part::RootStem => {
+                p.new_part(p.conf.work_dir.base_bg);
+                p.style(p.conf.work_dir.base_sty);
+                print!("/");
+            }
+            Part::Dir(d) => {
+                p.new_part(p.conf.work_dir.dir_bg);
+                p.style(p.conf.work_dir.dir_sty);
+                write_truncated_str(d, &p.conf.work_dir.path_trun, p.conf.work_dir.path_max_len);
+            }
+            Part::Stem(d) => {
+                p.new_part(p.conf.work_dir.base_bg);
+                p.style(p.conf.work_dir.base_sty);
+                write_truncated_str(d, &p.conf.work_dir.path_trun, p.conf.work_dir.path_max_len);
+            }
+            Part::Git(s) => {
+                p.new_part(p.conf.work_dir.git.bg);
+                p.style(p.conf.work_dir.git.sty);
+                print!("{}", p.conf.work_dir.git.prefix);
+                write_truncated_str(
+                    &s.branch,
+                    &p.conf.work_dir.path_trun,
+                    p.conf.work_dir.path_max_len,
+                );
+                if !s.is_clean_and_up_to_date() {
+                    print!("{}", p.conf.work_dir.git.separator);
+                    macro_rules! write_numbers {
+                        ($($conf_str:ident, $conf_sty:ident => $value:expr;)*) => {{
+                            $(if $value != 0 {
+                                p.style(p.conf.work_dir.git.$conf_sty);
+                                print!("{}", p.conf.work_dir.git.$conf_str);
+                            })*
+                        }}
+                    }
+                    write_numbers! {
+                        ahead, ahead_sty => s.commits_ahead;
+                        behind, behind_sty => s.commits_behind;
+                        conflict, conflict_sty => s.conflicts;
+                        index, index_sty => s.index_changes;
+                        wt, wt_sty => s.wt_changes;
+                    };
+                }
+            }
         }
     }
 }
@@ -97,10 +138,16 @@ fn process_path<'a>(path: &'a Path, mod_path: &'a Path, conf: &WorkDir) -> Vec<P
         let full_path = current_path.unwrap();
         // Show git branch if enabled
         if conf.git.enable && !normal_path_component_eq(component, ".git") {
-            if let Some(status) = git::get_status(full_path) {
-                let part = Part::Git(status);
-                if try_add_part(part) {
-                    break;
+            match git::get_status(full_path) {
+                Ok(Some(status)) => {
+                    let part = Part::Git(status);
+                    if try_add_part(part) {
+                        break;
+                    }
+                }
+                Ok(None) => (),
+                Err(e) => {
+                    eprintln!("promptress: git ({}): {}", full_path.display(), e);
                 }
             }
         }
@@ -173,16 +220,7 @@ where
 
 fn print_parts(parts: &[Part], p: &mut Prompt) {
     for part in parts {
-        let (style, bg) = part.style_bg(&p.conf.work_dir);
-        p.new_part(bg);
-        p.style(style);
-        if part.should_truncate(&p.conf.work_dir) {
-            let conf = &p.conf.work_dir;
-            let displayed_len = conf.comp_max_len - conf.comp_trun.chars().count();
-            print!("{:.*}{}", displayed_len, part.content(conf), conf.comp_trun);
-        } else {
-            print!("{}", part.content(&p.conf.work_dir));
-        }
+        part.write(p);
     }
 }
 
@@ -199,15 +237,6 @@ pub fn work_dir(p: &mut Prompt) {
 mod tests {
     use super::*;
     use std::collections::HashMap;
-
-    #[test]
-    fn part_truncate() {
-        let part = Part::Dir("0123456789abcdef".into());
-        let mut conf = WorkDir::default();
-        conf.comp_max_len = 12;
-        assert!(part.should_truncate(&conf));
-        assert_eq!(part.truncated_chars(&conf), 12);
-    }
 
     #[test]
     fn process_path_aliased() {

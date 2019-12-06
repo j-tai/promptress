@@ -145,15 +145,49 @@ pub struct WorkDirGit<'a> {
     pub sty: Style,
     /// Git branch prefix.
     pub prefix: Cow<'a, str>,
+    /// Separator between branch and status.
+    pub separator: Cow<'a, str>,
+
+    /// Indicator for 'current branch is ahead of upstream'.
+    pub ahead: Cow<'a, str>,
+    /// Style of indicator for 'current branch is ahead of upstream'.
+    pub ahead_sty: Style,
+    /// Indocator for 'current branch is behind upstream'.
+    pub behind: Cow<'a, str>,
+    /// Style of indocator for 'current branch is behind upstream'.
+    pub behind_sty: Style,
+    /// Indicator for 'there are file conflicts'.
+    pub conflict: Cow<'a, str>,
+    /// Style of indicator for 'there are file conflicts'.
+    pub conflict_sty: Style,
+    /// Indicator for 'there are staged changes'.
+    pub index: Cow<'a, str>,
+    /// Style of indicator for 'there are staged changes'.
+    pub index_sty: Style,
+    /// Indicator for 'there are unstaged changes'.
+    pub wt: Cow<'a, str>,
+    /// Style of indicator for 'there are unstaged changes'.
+    pub wt_sty: Style,
 }
 
 impl Default for WorkDirGit<'_> {
     fn default() -> Self {
         WorkDirGit {
             enable: false,
-            bg: 7,
+            bg: 250,
             sty: Style::color(0),
             prefix: "Git:".into(),
+            separator: "|".into(),
+            ahead: "↑".into(),
+            ahead_sty: Style::color(4),
+            behind: "↓".into(),
+            behind_sty: Style::color(4),
+            conflict: "!".into(),
+            conflict_sty: Style::color(0),
+            index: "•".into(),
+            index_sty: Style::color(2),
+            wt: "+".into(),
+            wt_sty: Style::color(1),
         }
     }
 }
