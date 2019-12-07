@@ -57,27 +57,29 @@ pub fn get_status(path: &Path) -> Result<Option<GitStatus>, Error> {
     };
 
     let mut opts = StatusOptions::new();
-    let status = repo.statuses(Some(&mut opts))?;
-    for ent in status.iter() {
-        let stat = ent.status();
-        if stat.is_index_new()
-            || stat.is_index_modified()
-            || stat.is_index_deleted()
-            || stat.is_index_renamed()
-            || stat.is_index_typechange()
-        {
-            s.index_changes += 1;
-        }
-        if stat.is_wt_new()
-            || stat.is_wt_modified()
-            || stat.is_wt_deleted()
-            || stat.is_wt_renamed()
-            || stat.is_wt_typechange()
-        {
-            s.wt_changes += 1;
-        }
-        if stat.is_conflicted() {
-            s.conflicts += 1;
+    // repo.statuses() could fail, e.g. in a bare repo
+    if let Ok(status) = repo.statuses(Some(&mut opts)) {
+        for ent in status.iter() {
+            let stat = ent.status();
+            if stat.is_index_new()
+                || stat.is_index_modified()
+                || stat.is_index_deleted()
+                || stat.is_index_renamed()
+                || stat.is_index_typechange()
+            {
+                s.index_changes += 1;
+            }
+            if stat.is_wt_new()
+                || stat.is_wt_modified()
+                || stat.is_wt_deleted()
+                || stat.is_wt_renamed()
+                || stat.is_wt_typechange()
+            {
+                s.wt_changes += 1;
+            }
+            if stat.is_conflicted() {
+                s.conflicts += 1;
+            }
         }
     }
 
