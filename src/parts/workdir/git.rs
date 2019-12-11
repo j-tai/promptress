@@ -28,7 +28,7 @@ impl GitStatus {
     }
 }
 
-pub fn get_status(path: &Path) -> Result<Option<GitStatus>, Error> {
+pub fn get_status(path: &Path, status: bool) -> Result<Option<GitStatus>, Error> {
     let mut s = GitStatus::default();
 
     let repo = match Repository::open(path) {
@@ -39,12 +39,16 @@ pub fn get_status(path: &Path) -> Result<Option<GitStatus>, Error> {
     s.branch = match head {
         Ok(h) => {
             if let Some(branch_name) = h.shorthand() {
-                let branch = repo.find_branch(branch_name, BranchType::Local)?;
-                if let Some(local) = branch.get().target() {
-                    if let Some(upstream) = branch.upstream().ok().and_then(|b| b.get().target()) {
-                        let (ahead, behind) = repo.graph_ahead_behind(local, upstream)?;
-                        s.commits_ahead = ahead as u32;
-                        s.commits_behind = behind as u32;
+                if !status {
+                    let branch = repo.find_branch(branch_name, BranchType::Local)?;
+                    if let Some(local) = branch.get().target() {
+                        if let Some(upstream) =
+                            branch.upstream().ok().and_then(|b| b.get().target())
+                        {
+                            let (ahead, behind) = repo.graph_ahead_behind(local, upstream)?;
+                            s.commits_ahead = ahead as u32;
+                            s.commits_behind = behind as u32;
+                        }
                     }
                 }
                 branch_name.to_string().into()
@@ -55,6 +59,10 @@ pub fn get_status(path: &Path) -> Result<Option<GitStatus>, Error> {
         Err(ref e) if e.code() == ErrorCode::UnbornBranch => "--".into(),
         Err(e) => return Err(e),
     };
+
+    if !status {
+        return Ok(Some(s));
+    }
 
     let mut opts = StatusOptions::new();
     // repo.statuses() could fail, e.g. in a bare repo
