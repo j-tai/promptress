@@ -108,6 +108,7 @@ pub struct WorkDir<'a> {
     pub base_sty: Style,
 
     /// Git options.
+    #[serde(borrow)]
     pub git: WorkDirGit<'a>,
 
     /// List of path aliases.
@@ -144,29 +145,36 @@ pub struct WorkDirGit<'a> {
     /// Git branch foreground style.
     pub sty: Style,
     /// Git branch prefix.
+    #[serde(borrow)]
     pub prefix: Cow<'a, str>,
     /// Separator between branch and status.
+    #[serde(borrow)]
     pub separator: Cow<'a, str>,
 
     /// Whether or not the Git status display is enabled.
     pub status: bool,
     /// Indicator for 'current branch is ahead of upstream'.
+    #[serde(borrow)]
     pub ahead: Cow<'a, str>,
     /// Style of indicator for 'current branch is ahead of upstream'.
     pub ahead_sty: Style,
     /// Indicator for 'current branch is behind upstream'.
+    #[serde(borrow)]
     pub behind: Cow<'a, str>,
     /// Style of indicator for 'current branch is behind upstream'.
     pub behind_sty: Style,
     /// Indicator for 'there are file conflicts'.
+    #[serde(borrow)]
     pub conflict: Cow<'a, str>,
     /// Style of indicator for 'there are file conflicts'.
     pub conflict_sty: Style,
     /// Indicator for 'there are staged changes'.
+    #[serde(borrow)]
     pub index: Cow<'a, str>,
     /// Style of indicator for 'there are staged changes'.
     pub index_sty: Style,
     /// Indicator for 'there are unstaged changes'.
+    #[serde(borrow)]
     pub wt: Cow<'a, str>,
     /// Style of indicator for 'there are unstaged changes'.
     pub wt_sty: Style,
