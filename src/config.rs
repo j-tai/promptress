@@ -148,6 +148,8 @@ pub struct WorkDirGit<'a> {
     /// Separator between branch and status.
     pub separator: Cow<'a, str>,
 
+    /// Whether or not the Git status display is enabled.
+    pub status: bool,
     /// Indicator for 'current branch is ahead of upstream'.
     pub ahead: Cow<'a, str>,
     /// Style of indicator for 'current branch is ahead of upstream'.
@@ -178,6 +180,7 @@ impl Default for WorkDirGit<'_> {
             sty: Style::color(0),
             prefix: "Git:".into(),
             separator: "|".into(),
+            status: false,
             ahead: "↑".into(),
             ahead_sty: Style::color(19),
             behind: "↓".into(),
