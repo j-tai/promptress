@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use std::path::Path;
 
+use if_chain::if_chain;
 use git2::{BranchType, Error, ErrorCode, Repository, StatusOptions};
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -39,16 +40,16 @@ pub fn get_status(path: &Path, status: bool) -> Result<Option<GitStatus>, Error>
     s.branch = match head {
         Ok(h) => {
             if let Some(branch_name) = h.shorthand() {
-                if !status {
-                    let branch = repo.find_branch(branch_name, BranchType::Local)?;
-                    if let Some(local) = branch.get().target() {
-                        if let Some(upstream) =
-                            branch.upstream().ok().and_then(|b| b.get().target())
-                        {
-                            let (ahead, behind) = repo.graph_ahead_behind(local, upstream)?;
-                            s.commits_ahead = ahead as u32;
-                            s.commits_behind = behind as u32;
-                        }
+                if_chain! {
+                    if status;
+                    if let Ok(branch) = repo.find_branch(branch_name, BranchType::Local);
+                    if let Some(local) = branch.get().target();
+                    if let Ok(upstream) = branch.upstream();
+                    if let Some(upstream) = upstream.get().target();
+                    then {
+                        let (ahead, behind) = repo.graph_ahead_behind(local, upstream)?;
+                        s.commits_ahead = ahead as u32;
+                        s.commits_behind = behind as u32;
                     }
                 }
                 branch_name.to_string().into()
