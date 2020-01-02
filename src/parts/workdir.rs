@@ -64,12 +64,12 @@ impl<'a> Part<'a> {
             Part::Dir(d) => {
                 p.new_part(p.conf.work_dir.dir_bg);
                 p.style(p.conf.work_dir.dir_sty);
-                write_truncated_str(d, &p.conf.work_dir.path_trun, p.conf.work_dir.path_max_len);
+                write_truncated_str(d, &p.conf.work_dir.comp_trun, p.conf.work_dir.comp_max_len);
             }
             Part::Stem(d) => {
                 p.new_part(p.conf.work_dir.base_bg);
                 p.style(p.conf.work_dir.base_sty);
-                write_truncated_str(d, &p.conf.work_dir.path_trun, p.conf.work_dir.path_max_len);
+                write_truncated_str(d, &p.conf.work_dir.comp_trun, p.conf.work_dir.comp_max_len);
             }
             Part::Git(s) => {
                 p.new_part(p.conf.work_dir.git.bg);
@@ -77,8 +77,8 @@ impl<'a> Part<'a> {
                 print!("{}", p.conf.work_dir.git.prefix);
                 write_truncated_str(
                     &s.branch,
-                    &p.conf.work_dir.path_trun,
-                    p.conf.work_dir.path_max_len,
+                    &p.conf.work_dir.comp_trun,
+                    p.conf.work_dir.comp_max_len,
                 );
                 if !s.is_clean_and_up_to_date() {
                     print!("{}", p.conf.work_dir.git.separator);
