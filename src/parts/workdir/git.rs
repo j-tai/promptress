@@ -15,6 +15,8 @@ pub struct GitStatus {
     pub index_changes: u32,
     /// Number of files changed in the work tree
     pub wt_changes: u32,
+    /// Number of untracked files in the work tree
+    pub untracked: u32,
     /// Number of files conflicted
     pub conflicts: u32,
 }
@@ -25,6 +27,7 @@ impl GitStatus {
             && self.commits_behind == 0
             && self.index_changes == 0
             && self.wt_changes == 0
+            && self.untracked == 0
             && self.conflicts == 0
     }
 }
@@ -66,6 +69,7 @@ pub fn get_status(path: &Path, status: bool) -> Result<Option<GitStatus>, Error>
     }
 
     let mut opts = StatusOptions::new();
+    opts.include_untracked(true);
     // repo.statuses() could fail, e.g. in a bare repo
     if let Ok(status) = repo.statuses(Some(&mut opts)) {
         for ent in status.iter() {
@@ -78,8 +82,7 @@ pub fn get_status(path: &Path, status: bool) -> Result<Option<GitStatus>, Error>
             {
                 s.index_changes += 1;
             }
-            if stat.is_wt_new()
-                || stat.is_wt_modified()
+            if stat.is_wt_modified()
                 || stat.is_wt_deleted()
                 || stat.is_wt_renamed()
                 || stat.is_wt_typechange()
@@ -88,6 +91,9 @@ pub fn get_status(path: &Path, status: bool) -> Result<Option<GitStatus>, Error>
             }
             if stat.is_conflicted() {
                 s.conflicts += 1;
+            }
+            if stat.is_wt_new() {
+                s.untracked += 1;
             }
         }
     }

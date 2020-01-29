@@ -96,6 +96,7 @@ impl<'a> Part<'a> {
                         conflict, conflict_sty => s.conflicts;
                         index, index_sty => s.index_changes;
                         wt, wt_sty => s.wt_changes;
+                        untracked, untracked_sty => s.untracked;
                     };
                 }
             }
