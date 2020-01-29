@@ -178,6 +178,11 @@ pub struct WorkDirGit<'a> {
     pub wt: Cow<'a, str>,
     /// Style of indicator for 'there are unstaged changes'.
     pub wt_sty: Style,
+    /// Indicator for 'there are untracked files'.
+    #[serde(borrow)]
+    pub untracked: Cow<'a, str>,
+    /// Style of indicator for 'there are untracked files'.
+    pub untracked_sty: Style,
 }
 
 impl Default for WorkDirGit<'_> {
@@ -199,6 +204,8 @@ impl Default for WorkDirGit<'_> {
             index_sty: Style::color(28),
             wt: "+".into(),
             wt_sty: Style::color(88),
+            untracked: "-".into(),
+            untracked_sty: Style::color(88),
         }
     }
 }
