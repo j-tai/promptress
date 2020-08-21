@@ -201,7 +201,7 @@ dependencies = [
 
 [[package]]
 name = "promptress"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "dirs 3.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "git2 0.13.9 (registry+https://github.com/rust-lang/crates.io-index)",
