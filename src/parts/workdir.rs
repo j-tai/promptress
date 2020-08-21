@@ -178,7 +178,7 @@ fn process_path<'a>(path: &'a Path, mod_path: &'a Path, conf: &WorkDir) -> Vec<P
                 // part: Dir("")
                 let stem = Part::Stem(dir);
                 // stem: Stem("foo")
-                mem::replace(part, stem);
+                *part = stem;
                 // part: Stem("foo")
                 break;
             }
