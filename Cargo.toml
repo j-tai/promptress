@@ -16,12 +16,12 @@ lto = true
 codegen-units = 1
 
 [dependencies]
-serde = { version = "1.0.115", features = ["derive"] }
-serde_json = "1.0.57"
-toml = "0.5.6"
-users = "0.10.0"
-smallvec = "1.4.2"
-termion = "1.5.5"
-git2 = { version = "0.13.9", default-features = false }
-dirs = "3.0.1"
-if_chain = "1.0.0"
+serde = { version = "1.0.137", features = ["derive"] }
+serde_json = "1.0.81"
+toml = "0.5.9"
+users = "0.11.0"
+smallvec = "1.8.0"
+termion = "1.5.6"
+git2 = { version = "0.14.4", default-features = false }
+dirs = "4.0.0"
+if_chain = "1.0.2"
