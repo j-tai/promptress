@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
@@ -33,11 +32,10 @@ impl Style {
 
 #[derive(Default, Serialize, Deserialize)]
 #[serde(default)]
-pub struct Config<'a> {
+pub struct Config {
     pub dollar: Dollar,
     pub exit_code: ExitCode,
-    #[serde(borrow)]
-    pub work_dir: WorkDir<'a>,
+    pub work_dir: WorkDir,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -80,18 +78,16 @@ impl Default for ExitCode {
 
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
-pub struct WorkDir<'a> {
+pub struct WorkDir {
     /// String to display when any path component is truncated.
-    #[serde(borrow)]
-    pub comp_trun: Cow<'a, str>,
+    pub comp_trun: String,
     /// Maximum total length of each path component.
     pub comp_max_len: usize,
 
     /// Maximum total length of the path.
     pub path_max_len: usize,
     /// String to display when the entire path is truncated.
-    #[serde(borrow)]
-    pub path_trun: Cow<'a, str>,
+    pub path_trun: String,
     /// Background color of path truncation string.
     pub path_trun_bg: u8,
     /// Foreground style of path truncation string.
@@ -108,15 +104,13 @@ pub struct WorkDir<'a> {
     pub base_sty: Style,
 
     /// Git options.
-    #[serde(borrow)]
-    pub git: WorkDirGit<'a>,
+    pub git: WorkDirGit,
 
     /// List of path aliases.
-    #[serde(borrow)]
-    pub aliases: HashMap<Cow<'a, str>, Cow<'a, str>>,
+    pub aliases: HashMap<String, String>,
 }
 
-impl Default for WorkDir<'_> {
+impl Default for WorkDir {
     fn default() -> Self {
         WorkDir {
             comp_trun: "...".into(),
@@ -137,7 +131,7 @@ impl Default for WorkDir<'_> {
 
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
-pub struct WorkDirGit<'a> {
+pub struct WorkDirGit {
     /// Whether or not Git is enabled.
     pub enable: bool,
     /// Git branch background color.
@@ -145,47 +139,39 @@ pub struct WorkDirGit<'a> {
     /// Git branch foreground style.
     pub sty: Style,
     /// Git branch prefix.
-    #[serde(borrow)]
-    pub prefix: Cow<'a, str>,
+    pub prefix: String,
     /// Separator between branch and status.
-    #[serde(borrow)]
-    pub separator: Cow<'a, str>,
+    pub separator: String,
 
     /// Whether or not the Git status display is enabled.
     pub status: bool,
     /// Indicator for 'current branch is ahead of upstream'.
-    #[serde(borrow)]
-    pub ahead: Cow<'a, str>,
+    pub ahead: String,
     /// Style of indicator for 'current branch is ahead of upstream'.
     pub ahead_sty: Style,
     /// Indicator for 'current branch is behind upstream'.
-    #[serde(borrow)]
-    pub behind: Cow<'a, str>,
+    pub behind: String,
     /// Style of indicator for 'current branch is behind upstream'.
     pub behind_sty: Style,
     /// Indicator for 'there are file conflicts'.
-    #[serde(borrow)]
-    pub conflict: Cow<'a, str>,
+    pub conflict: String,
     /// Style of indicator for 'there are file conflicts'.
     pub conflict_sty: Style,
     /// Indicator for 'there are staged changes'.
-    #[serde(borrow)]
-    pub index: Cow<'a, str>,
+    pub index: String,
     /// Style of indicator for 'there are staged changes'.
     pub index_sty: Style,
     /// Indicator for 'there are unstaged changes'.
-    #[serde(borrow)]
-    pub wt: Cow<'a, str>,
+    pub wt: String,
     /// Style of indicator for 'there are unstaged changes'.
     pub wt_sty: Style,
     /// Indicator for 'there are untracked files'.
-    #[serde(borrow)]
-    pub untracked: Cow<'a, str>,
+    pub untracked: String,
     /// Style of indicator for 'there are untracked files'.
     pub untracked_sty: Style,
 }
 
-impl Default for WorkDirGit<'_> {
+impl Default for WorkDirGit {
     fn default() -> Self {
         WorkDirGit {
             enable: false,

@@ -1,12 +1,12 @@
 use crate::{Config, Style};
 
-pub struct Prompt<'a> {
-    pub conf: Config<'a>,
+pub struct Prompt {
+    pub conf: Config,
     last_bg: Option<u8>,
 }
 
-impl<'a> Prompt<'a> {
-    pub fn new(conf: Config<'a>) -> Self {
+impl Prompt {
+    pub fn new(conf: Config) -> Self {
         Prompt {
             conf,
             last_bg: None,
@@ -14,7 +14,7 @@ impl<'a> Prompt<'a> {
     }
 }
 
-impl Prompt<'_> {
+impl Prompt {
     #[inline]
     fn color_begin(&mut self) {
         print!("\x01\x1b[0");
@@ -72,7 +72,7 @@ impl Prompt<'_> {
     }
 }
 
-impl Prompt<'_> {
+impl Prompt {
     pub fn new_part(&mut self, bg: u8) {
         match self.last_bg {
             None => {
